@@ -8,6 +8,10 @@
   margin-top: 20px;
   text-align: center;
 }
+
+.name {
+  justify-content: center;
+}
 .flexWLT {
   display: flex;
   justify-content: space-around;
