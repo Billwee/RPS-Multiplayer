@@ -20,52 +20,89 @@ function preload() {
   let users = database.ref('/users');
   let score = database.ref('/score');
   let choice = database.ref('/choice');
+  let player1Ref = database.ref().child('player1');
+  let player2Ref = database.ref().child('player2');
+  let extraRef = database.ref().child('extra');
 
-  var player1 = '';
+  var name = '';
+  var active = false;
+  var player1Active = false;
+  var player2Active = false;
+  var extra = [];
 
-  // let enterName = prompt('Enter Your Name');
+  //TRY CREATING AN OBJECT THAT CONTAINS ALL PLAYER INFO
 
-  connectedRef.on('value', function(snap) {
-    // If they are connected..
-    if (snap.val()) {
-      // Add user to the connections list.
-      var con = connectionsRef.push(true);
-      // Remove user from the connection list when they disconnect.
+  // ON DISCONNECT FUNCTION THAT REMOVES PLAYER OBJECTS
 
-      con.onDisconnect().remove();
-    }
-  });
+  // BOOLEANS FOR PLAYER ROLE, TURN (IN OBJECT),
+
+  // USE THIS IN A FUNCTION AND CALL IT IN THE CLICK FUNCTION FOR THE
+  // NAME SUBMIT BUTTON
 
   connectionsRef.on('value', function(snap) {
     if (snap.val()) {
       console.log(snap.numChildren());
     }
-    //assign();
   });
 
-  $('#nameBTN').on('click', function(event) {
+  player1Ref.on('value', function(snap) {
+    $('#player1').text(snap.child('name').val());
+    console.log(snap.val());
+    console.log(snap.child('player1').val());
+  });
+
+  player2Ref.on('value', function(snap) {
+    $('#player2').text(snap.child('name').val());
+    console.log(snap.val());
+  });
+
+  //Name Click Function
+  $(document).on('click', '#nameBTN', function(event) {
     event.preventDefault(event);
+    if ($('#nameInput').val() === '') {
+      return console.group('no name');
+    }
 
     var name = $('#nameInput')
       .val()
       .trim();
 
-    return connectionsRef.once('value').then(function(snapshot) {
-      if (snapshot.numChildren() === 1) {
-        var user = users.push(true);
-        // var user = users.push(name);
-        // var user = users.push().set({ player1: name });
-        // users.push({ player1: name });
-      } else if (snapshot.numChildren() === 2) {
-        // var user = users.push().set({ player2: name });
-        // users.push({ player2: name });
-      } else if (snapshot.numChildren() >= 3) {
-        // var user = users.push().set({ extra: name });
-        // users.push({ extra: name });
+    if (!active) {
+      connectedRef.on('value', function(snap) {
+        if (snap.val()) {
+          var con = connectionsRef.push(true);
+          con.onDisconnect().remove();
+        }
+      });
+    }
+
+    database.ref().once('value', function(snap) {
+      if (snap.child('player1').exists() === false && !active) {
+        player1Ref.set({ name: name });
+        active = true;
+        player1Ref.onDisconnect().remove();
+        console.log(snap.child('player1Ref').exists());
+      } else if (snap.child('player2').exists() === false && !active) {
+        player2Ref.set({ name: name });
+        active = true;
+        player2Ref.onDisconnect().remove();
       }
-      console.log(snapshot.numChildren());
-      user.onDisconnect().remove();
     });
+
+    // return connectionsRef.once('value').then(function(snapshot) {
+    //   if (snapshot.numChildren() === 1) {
+    //     player1Ref.set({ name: name });
+    //     player1Ref.onDisconnect().remove();
+    //   } else if (snapshot.numChildren() === 2) {
+    //     player2Ref.set({ name: name });
+    //     player2Ref.onDisconnect().remove();
+    //   } else if (snapshot.numChildren() >= 3) {
+    //     extraRef.push({ name: name });
+    //     extraRef.onDisconnect().remove();
+    //     var extra = [];
+    //     extra.push(name);
+    //   }
+    // });
   });
 
   //Attempt one : listeners to add data with prompt

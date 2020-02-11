@@ -22,6 +22,10 @@
   display: flex;
 }
 
+.player {
+  text-align: center;
+}
+
 .player1Div {
   border: 1px black solid;
   height: 200px;

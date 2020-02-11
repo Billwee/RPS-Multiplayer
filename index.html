@@ -34,18 +34,24 @@
       </form>
       <p>Round #</p>
       <div class="flexWLT">
-        <p>Wins:</p>
-        <p>Ties:</p>
-        <p>Losses:</p>
+        <p>Wins: <span id="winCount">0</span></p>
+        <p>Ties: <span id="tieCount">0</span></p>
+        <p>Losses: <span id="loseCount">0</span></p>
       </div>
     </div>
 
+    <!--GAME AREA -->
     <div class="gameArea container">
-      <div class="player1Div"></div>
+      <div class="player1Div player">
+        <p id="player1">######</p>
+      </div>
       <div class="center"></div>
-      <div class="player2Div"></div>
+      <div class="player2Div player">
+        <p id="player2">####</p>
+      </div>
     </div>
 
+    <!-- CHAT -->
     <div class="container chat">
       <form action="">
         <div class="form-group">
