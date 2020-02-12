@@ -32,7 +32,12 @@ function preload() {
   var active = false;
   var player1Active = false;
   var player2Active = false;
-  var extra = [];
+  var round = true;
+  var tie = 0;
+  var oneWin = 0;
+  var oneLoss = 0;
+  var twoWin = 0;
+  var twoLoss = 0;
 
   //TRY CREATING AN OBJECT THAT CONTAINS ALL PLAYER INFO
 
@@ -49,40 +54,34 @@ function preload() {
     }
   });
 
-  function pageLoaded() {
-    connectedRef.once('value', function(snap) {
-      if (snap.numChildren() <= 1) {
-        player1RefStart.set({ name: 'Enter Name to Play' });
-        player2RefStart.set({ name: 'Enter Name to Play' });
-
-        player1RefStart.on('value', function(snap) {
-          $('#player1').text(snap.child('name').val());
-        });
-        player2RefStart.on('value', function(snap) {
-          $('#player2').text(snap.child('name').val());
-        });
-      }
-      player1RefStart.onDisconnect().remove();
-      player2RefStart.onDisconnect().remove();
-    });
-  }
-
   player1Ref.on('value', function(snap) {
     if (snap.val()) {
       $('#player1').text(snap.child('name').val());
+    } else {
+      player1RefStart.set({ name: 'Enter Name to Play' });
+      player1RefStart.once('value', function(snap) {
+        $('#player1').text(snap.child('name').val());
+      });
     }
+    // player1RefStart.onDisconnect().remove();
   });
 
   player2Ref.on('value', function(snap) {
     if (snap.val()) {
       $('#player2').text(snap.child('name').val());
+    } else {
+      player2RefStart.set({ name: 'Enter Name to Play' });
+      player2RefStart.once('value', function(snap) {
+        $('#player2').text(snap.child('name').val());
+      });
     }
+    // player2RefStart.onDisconnect().remove();
   });
 
   //Name Click Function
   $(document).on('click', '#nameBTN', function(event) {
     event.preventDefault(event);
-    if ($('#nameInput').val() === '') {
+    if ($('#nameInput').val() === '' && active) {
       return console.group('no name');
     }
 
@@ -102,34 +101,69 @@ function preload() {
     database.ref().once('value', function(snap) {
       if (snap.child('player1').exists() === false && !active) {
         player1Ref.set({ name: name });
-        player1RefStart.set({ name: name });
         active = true;
         player1Active = true;
         console.log('player1Active = ' + player1Active);
         player1Ref.onDisconnect().remove();
       } else if (snap.child('player2').exists() === false && !active) {
         player2Ref.set({ name: name });
-        player2RefStart.set({ name: name });
         active = true;
         player2Active = true;
         console.log('player2Active = ' + player2Active);
         player2Ref.onDisconnect().remove();
       }
     });
+    //Work on disconnecting players resetting active and playerActive
     //WORK ON EXTRA PLAYERS
   });
 
+  //FIND A WAY TO MAKE INDIVIDUAL CHOICES
+
   choiceRef.on('value', function(snap) {
     console.log('choice');
-    if (snap.child('player1').val()) {
-      console.log('1choice');
+    if (snap.val() === null) {
+      console.log('null');
+      return;
+    }
+    if (snap.child('player1').val() === '' && player1Active === true) {
+      $('.choices1').css('display', 'block');
+    }
+    if (snap.child('player1').val() === '' && player2Active === true) {
+      $('.player1Picking').css('display', 'block');
+    }
+    if (snap.child('player1').val() !== '') {
+      console.log('choicemade');
+      $('.choices1').css('display', 'none');
+      $('.player1Picking').css('display', 'none');
+    }
+    if (snap.child('player1').val() !== '' && player2Active === true) {
+      $('.choices2').css('display', 'block');
+    }
+    if (snap.child('player2').val() !== '') {
+      $('.choices2').css('display', 'none');
+      console.log('choices made!');
+    }
+    if (
+      snap.child('player2').val() !== '' &&
+      snap.child('player2').val() !== ''
+    ) {
+      var choice1 = snap.child('player1').val();
+      var choice2 = snap.child('player2').val();
+
+      if (choice1 === choice2) {
+      }
     }
   });
-  function choices() {}
 
   //Starts Game - Sets Default Values
   database.ref().on('value', function(snap) {
-    if (snap.child('player1').exists() && snap.child('player2').exists()) {
+    if (
+      snap.child('player1').exists() &&
+      snap.child('player2').exists() &&
+      round === true &&
+      active === true
+    ) {
+      console.log('start');
       choiceRef.set({
         player1: '',
         player2: ''
@@ -145,10 +179,20 @@ function preload() {
       tiesRef.set({
         ties: 0
       });
+      round = false;
       choiceRef.onDisconnect().remove();
       winsRef.onDisconnect().remove();
       lossesRef.onDisconnect().remove();
       tiesRef.onDisconnect().remove();
+    }
+  });
+
+  $('.choice').on('click', function() {
+    var pick = $(this).attr('id');
+    if (player1Active === true) {
+      choiceRef.child('player1').set(pick);
+    } else if (player2Active === true) {
+      choiceRef.child('player2').set(pick);
     }
   });
 
@@ -195,7 +239,6 @@ function preload() {
   //   .catch(function(error) {
   //     console.log("Remove failed: " + error.message)
   //   });
-  pageLoaded();
 }
 
 $(document).ready(function() {

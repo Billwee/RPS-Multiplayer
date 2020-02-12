@@ -22,6 +22,25 @@
   display: flex;
 }
 
+.center {
+  text-align: center;
+}
+
+#tie {
+  display: none;
+  margin-top: 30px;
+}
+
+#onewins {
+  display: none;
+  margin-top: 30px;
+}
+
+#twowins {
+  display: none;
+  margin-top: 30px;
+}
+
 .player {
   text-align: center;
 }
@@ -35,6 +54,26 @@
   border: 1px black solid;
   height: 200px;
   width: 40%;
+}
+
+.choices1 {
+  display: none;
+}
+.choices2 {
+  display: none;
+}
+
+.choice {
+  cursor: pointer;
+}
+
+.choice:hover {
+  background-color: teal;
+}
+
+.player1Picking {
+  margin-top: 50px;
+  display: none;
 }
 .center {
   border: 1px black solid;
