@@ -5,8 +5,8 @@
 }
 
 .info {
-  margin-top: 20px;
   text-align: center;
+  margin-top: 10px;
 }
 
 .name {
@@ -15,7 +15,6 @@
 .flexWLT {
   display: flex;
   justify-content: space-around;
-  margin: 20px 30px;
 }
 
 .gameArea {
@@ -75,6 +74,11 @@
   margin-top: 50px;
   display: none;
 }
+
+.player2Picking {
+  margin-top: 50px;
+  display: none;
+}
 .center {
   border: 1px black solid;
   height: 100px;
@@ -94,4 +98,11 @@
 .msg {
   line-height: 0.5;
   font-size: 12px;
+}
+
+#blankAlert {
+}
+
+#alert {
+  display: none;
 }

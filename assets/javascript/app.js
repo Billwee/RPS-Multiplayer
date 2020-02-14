@@ -28,25 +28,14 @@ function preload() {
   let player2RefStart = database.ref().child('player2Start');
   let extraRef = database.ref().child('extra');
 
-  var name = '';
+  let name = '';
   var active = false;
   var player1Active = false;
   var player2Active = false;
   var round = true;
   var tie = 0;
   var oneWin = 0;
-  var oneLoss = 0;
   var twoWin = 0;
-  var twoLoss = 0;
-
-  //TRY CREATING AN OBJECT THAT CONTAINS ALL PLAYER INFO
-
-  // ON DISCONNECT FUNCTION THAT REMOVES PLAYER OBJECTS
-
-  // BOOLEANS FOR PLAYER ROLE, TURN (IN OBJECT),
-
-  // USE THIS IN A FUNCTION AND CALL IT IN THE CLICK FUNCTION FOR THE
-  // NAME SUBMIT BUTTON
 
   connectionsRef.on('value', function(snap) {
     if (snap.val()) {
@@ -54,6 +43,8 @@ function preload() {
     }
   });
 
+  //These two functions check if a player is logged in
+  //if not the player spot will display "Enter name to play"
   player1Ref.on('value', function(snap) {
     if (snap.val()) {
       $('#player1').text(snap.child('name').val());
@@ -63,7 +54,6 @@ function preload() {
         $('#player1').text(snap.child('name').val());
       });
     }
-    // player1RefStart.onDisconnect().remove();
   });
 
   player2Ref.on('value', function(snap) {
@@ -75,20 +65,31 @@ function preload() {
         $('#player2').text(snap.child('name').val());
       });
     }
-    // player2RefStart.onDisconnect().remove();
   });
 
   //Name Click Function
-  $(document).on('click', '#nameBTN', function(event) {
+  //Input validation first then it sets your name in the correct
+  //player position. Any players that enter after the first two
+  //will still be able to chat, but not play.
+  $('#nameBTN').on('click', function(event) {
     event.preventDefault(event);
-    if ($('#nameInput').val() === '' && active) {
-      return console.group('no name');
+    if ($('#nameInput').val() === '') {
+      return (
+        $('#blankAlert').css('display', 'none'),
+        $('#alert')
+          .text('Please Enter A Name')
+          .css('display', 'block'),
+        setTimeout(function() {
+          $('#blankAlert').css('display', 'block');
+          $('#alert')
+            .text('')
+            .css('display', 'none');
+        }, 2000)
+      );
     }
-
     name = $('#nameInput')
       .val()
       .trim();
-
     if (!active) {
       connectedRef.on('value', function(snap) {
         if (snap.val()) {
@@ -97,7 +98,6 @@ function preload() {
         }
       });
     }
-
     database.ref().once('value', function(snap) {
       if (snap.child('player1').exists() === false && !active) {
         player1Ref.set({ name: name });
@@ -113,16 +113,12 @@ function preload() {
         player2Ref.onDisconnect().remove();
       }
     });
-    //Work on disconnecting players resetting active and playerActive
-    //WORK ON EXTRA PLAYERS
   });
 
-  //FIND A WAY TO MAKE INDIVIDUAL CHOICES
-
+  //This function compares the two players choices and updates the html
+  //with the database entries.
   choiceRef.on('value', function(snap) {
-    console.log('choice');
     if (snap.val() === null) {
-      console.log('null');
       return;
     }
     if (snap.child('player1').val() === '' && player1Active === true) {
@@ -132,25 +128,63 @@ function preload() {
       $('.player1Picking').css('display', 'block');
     }
     if (snap.child('player1').val() !== '') {
-      console.log('choicemade');
       $('.choices1').css('display', 'none');
       $('.player1Picking').css('display', 'none');
+    }
+
+    if (snap.child('player1').val() !== '' && player1Active === true) {
+      $('.player2Picking').css('display', 'block');
     }
     if (snap.child('player1').val() !== '' && player2Active === true) {
       $('.choices2').css('display', 'block');
     }
     if (snap.child('player2').val() !== '') {
       $('.choices2').css('display', 'none');
-      console.log('choices made!');
+      $('.player2Picking').css('display', 'none');
     }
     if (
-      snap.child('player2').val() !== '' &&
+      snap.child('player1').val() !== '' &&
       snap.child('player2').val() !== ''
     ) {
       var choice1 = snap.child('player1').val();
       var choice2 = snap.child('player2').val();
 
       if (choice1 === choice2) {
+        tie++;
+        round++;
+        tiesRef.child('ties').set(tie);
+        $('#tie').css('display', 'block');
+        setTimeout(function() {
+          $('#tie').css('display', 'none');
+          choiceRef.child('player1').set('');
+          choiceRef.child('player2').set('');
+        }, 3000);
+      } else if (
+        (choice1 === 'P' && choice2 === 'R') ||
+        (choice1 === 'R' && choice2 === 'S') ||
+        (choice1 === 'S' && choice2 === 'P')
+      ) {
+        $('#onewins').css('display', 'block');
+        oneWin++;
+        round++;
+        winsRef.child('player1').set(oneWin);
+        lossesRef.child('player2').set(oneWin);
+        setTimeout(function() {
+          $('#onewins').css('display', 'none');
+          choiceRef.child('player1').set('');
+          choiceRef.child('player2').set('');
+        }, 3000);
+      } else {
+        $('#twowins').css('display', 'block');
+        twoWin++;
+        round++;
+        winsRef.child('player2').set(twoWin);
+        lossesRef.child('player1').set(twoWin);
+        setTimeout(function() {
+          $('#twowins').css('display', 'none');
+          choiceRef.child('player1').set('');
+          choiceRef.child('player2').set('');
+        }, 3000);
       }
     }
   });
@@ -180,6 +214,7 @@ function preload() {
         ties: 0
       });
       round = false;
+
       choiceRef.onDisconnect().remove();
       winsRef.onDisconnect().remove();
       lossesRef.onDisconnect().remove();
@@ -187,6 +222,43 @@ function preload() {
     }
   });
 
+  //Displays wins for individual players
+  database
+    .ref()
+    .child('wins')
+    .on('value', function(snap) {
+      if (player1Active === true) {
+        $('#winCount').text(snap.child('player1').val());
+      } else if (player2Active === true) {
+        $('#winCount').text(snap.child('player2').val());
+      }
+    });
+
+  //Displays losses for individual players
+  database
+    .ref()
+    .child('losses')
+    .on('value', function(snap) {
+      if (player1Active === true) {
+        $('#loseCount').text(snap.child('player1').val());
+      } else if (player2Active === true) {
+        $('#loseCount').text(snap.child('player2').val());
+      }
+    });
+
+  //Displays ties for individual players
+  database
+    .ref()
+    .child('ties')
+    .on('value', function(snap) {
+      if (player1Active === true) {
+        $('#tieCount').text(snap.child('ties').val());
+      } else if (player2Active === true) {
+        $('#tieCount').text(snap.child('ties').val());
+      }
+    });
+
+  //Sets RPS choice for individual players
   $('.choice').on('click', function() {
     var pick = $(this).attr('id');
     if (player1Active === true) {
@@ -200,25 +272,40 @@ function preload() {
   $('#send').on('click', function(event) {
     event.preventDefault(event);
 
-    let chat = $('#chatInput')
-      .val()
-      .trim();
+    if (name === '') {
+      $('#blankAlert').css('display', 'none');
+      $('#alert')
+        .text('Please Enter A Name')
+        .css('display', 'block');
+      setTimeout(function() {
+        $('#blankAlert').css('display', 'block');
+        $('#alert')
+          .text('')
+          .css('display', 'none');
+      }, 2000);
+    } else if ($('#chatInput').val() === '') {
+      return;
+    } else {
+      let chat = $('#chatInput')
+        .val()
+        .trim();
 
-    database
-      .ref()
-      .child('chat')
-      .push({
-        name,
-        chat
-      });
+      database
+        .ref()
+        .child('chat')
+        .push({
+          name,
+          chat
+        });
+
+      $('#chatInput').val('');
+    }
   });
 
   database
     .ref()
     .child('chat')
     .on('child_added', function(snapshot) {
-      // console.log(snapshot.val());
-
       $('#chatBox').append(
         '<p class="msg">' +
           snapshot.val().name.bold() +
@@ -229,16 +316,6 @@ function preload() {
 
       $('#chatBox').scrollTop($('#chatBox')[0].scrollHeight);
     });
-
-  // REMOVE EXAMPLE
-  //   var adaRef = firebase.database().ref('users/ada');
-  // adaRef.remove()
-  //   .then(function() {
-  //     console.log("Remove succeeded.")
-  //   })
-  //   .catch(function(error) {
-  //     console.log("Remove failed: " + error.message)
-  //   });
 }
 
 $(document).ready(function() {
