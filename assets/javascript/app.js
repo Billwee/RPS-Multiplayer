@@ -32,7 +32,6 @@ function preload() {
   var active = false;
   var player1Active = false;
   var player2Active = false;
-  var round = true;
   var tie = 0;
   var oneWin = 0;
   var twoWin = 0;
@@ -151,7 +150,6 @@ function preload() {
 
       if (choice1 === choice2) {
         tie++;
-        round++;
         tiesRef.child('ties').set(tie);
         $('#tie').css('display', 'block');
         setTimeout(function() {
@@ -166,7 +164,6 @@ function preload() {
       ) {
         $('#onewins').css('display', 'block');
         oneWin++;
-        round++;
         winsRef.child('player1').set(oneWin);
         lossesRef.child('player2').set(oneWin);
         setTimeout(function() {
@@ -177,7 +174,6 @@ function preload() {
       } else {
         $('#twowins').css('display', 'block');
         twoWin++;
-        round++;
         winsRef.child('player2').set(twoWin);
         lossesRef.child('player1').set(twoWin);
         setTimeout(function() {
