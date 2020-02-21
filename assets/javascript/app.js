@@ -35,6 +35,7 @@ function preload() {
   var tie = 0;
   var oneWin = 0;
   var twoWin = 0;
+  var round = true;
 
   connectionsRef.on('value', function(snap) {
     if (snap.val()) {
